@@ -66,6 +66,9 @@ async fn main() {
         .map(pixiv_handler)
         .map(|r: Result<&'static str, Box<dyn std::error::Error>>| r.unwrap_or("Error"));
 
+    let port = env::var("PORT").unwrap_or("8080".to_owned()).parse()
+        .expect("not number");
+
     warp::serve(server)
-        .run(([0, 0, 0, 0], 80)).await
+        .run(([0, 0, 0, 0], port)).await
 }
