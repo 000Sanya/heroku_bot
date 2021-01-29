@@ -35,6 +35,10 @@ impl TelegramSenderActor {
 impl ImageSender for TelegramSenderActor {
     async fn handle_request(&mut self, request: Arc<ImageRequest>) -> ActorResult<()> {
         log::info!("Handle request from {}", request.source);
+
+        self.bot.execute(SendMessage::new(self.config.telegram_target, &request.source))
+            .await?;
+
         match &request.body {
             ImageRequestBody::SingleImage { image } => {
                 let file = image_as_input_file(image);
@@ -79,13 +83,11 @@ impl ImageSender for TelegramSenderActor {
                     self.bot.execute(method2).await
                         .log_on_error("Error on send docs group")?;
 
+
                     log::info!("Sended {} docs from {}", album.len(), request.source);
                 }
             }
         }
-
-        self.bot.execute(SendMessage::new(self.config.telegram_target, &request.source))
-            .await?;
 
         Produces::ok(())
     }
