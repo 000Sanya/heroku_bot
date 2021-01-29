@@ -12,7 +12,13 @@ pub struct TelegramSenderActor {
     config: Arc<Config>,
 }
 
-impl Actor for TelegramSenderActor {}
+#[async_trait::async_trait]
+impl Actor for TelegramSenderActor {
+    async fn error(&mut self, error: act_zero::ActorError) -> bool {
+        log::error!("{}", error);
+        false
+    }
+}
 
 impl TelegramSenderActor {
     pub fn new(config: Arc<Config>) -> Self {
@@ -36,9 +42,9 @@ impl ImageSender for TelegramSenderActor {
                 let method = SendPhoto::new(self.config.telegram_target, file);
                 let method2 = SendDocument::new(self.config.telegram_target, file2);
                 self.bot.execute(method).await
-                    .log_on_error("error on execute load")?;
+                    .log_on_error("error on send image")?;
                 self.bot.execute(method2).await
-                    .log_on_error("error on execute load")?;
+                    .log_on_error("error on send docs")?;
 
                 log::info!("Sended one image from {}", request.source);
             }
@@ -51,9 +57,11 @@ impl ImageSender for TelegramSenderActor {
                             media.add_item(file, InputMediaPhoto::default())
                         });
 
-                    let method = SendMediaGroup::new(self.config.telegram_target, media)?;
+                    let method = SendMediaGroup::new(self.config.telegram_target, media)
+                        .log_on_error("Error on compile media group")?;
 
-                    self.bot.execute(method).await?;
+                    self.bot.execute(method).await
+                        .log_on_error("Error on send media group")?;
 
                     log::info!("Sended {} image from {}", album.len(), request.source);
                 }
@@ -65,9 +73,11 @@ impl ImageSender for TelegramSenderActor {
                         .fold(MediaGroup::default(), |media, file| {
                             media.add_item(file, InputMediaDocument::default())
                         });
-                    let method2 = SendMediaGroup::new(self.config.telegram_target, docs)?;
+                    let method2 = SendMediaGroup::new(self.config.telegram_target, docs)
+                        .log_on_error("Error on compile docs group")?;
 
-                    self.bot.execute(method2).await?;
+                    self.bot.execute(method2).await
+                        .log_on_error("Error on send docs group")?;
 
                     log::info!("Sended {} docs from {}", album.len(), request.source);
                 }

@@ -23,7 +23,13 @@ impl VkSenderActor {
     }
 }
 
-impl Actor for VkSenderActor {}
+#[async_trait::async_trait]
+impl Actor for VkSenderActor {
+    async fn error(&mut self, error: act_zero::ActorError) -> bool {
+        log::error!("{}", error);
+        false
+    }
+}
 
 #[async_trait::async_trait]
 impl ImageSender for VkSenderActor {
