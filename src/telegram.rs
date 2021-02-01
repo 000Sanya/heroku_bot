@@ -1,6 +1,6 @@
 use crate::config::Config;
 use crate::request::{Image, ImageSender, ImageRequest, ImageRequestBody};
-use act_zero::{Actor, Produces, ActorResult};
+use act_zero::{Actor, Produces, ActorResult, ActorError, Addr};
 use std::io::Cursor;
 use std::sync::Arc;
 use tgbot::methods::{SendMediaGroup, SendMessage, SendPhoto, SendDocument};
@@ -14,7 +14,15 @@ pub struct TelegramSenderActor {
 
 #[async_trait::async_trait]
 impl Actor for TelegramSenderActor {
-    async fn error(&mut self, error: act_zero::ActorError) -> bool {
+    async fn started(&mut self, _addr: Addr<Self>) -> ActorResult<()>
+        where
+            Self: Sized,
+    {
+        log::info!("Start Telegram actor");
+        Produces::ok(())
+    }
+
+    async fn error(&mut self, error: ActorError) -> bool {
         log::error!("{}", error);
         false
     }

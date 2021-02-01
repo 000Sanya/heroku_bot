@@ -18,8 +18,6 @@ pub struct Image {
 }
 
 #[async_trait::async_trait]
-pub trait ImageSender: Send {
+pub trait ImageSender: Actor + Send {
     async fn handle_request(&mut self, request: Arc<ImageRequest>) -> ActorResult<()>;
 }
-
-impl Actor for dyn ImageSender {}
