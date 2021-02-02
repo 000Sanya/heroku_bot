@@ -28,6 +28,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "afddf7f520a80dbf76e6f50a35bca42a2331ef227a28b3b6dc5c2e2338d114b1"
 
 [[package]]
+name = "assert-json-diff"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4259cbe96513d2f1073027a259fc2ca917feb3026a5a8d984e3628e490255cc0"
+dependencies = [
+ "extend",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "async-stream"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -205,6 +216,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "colored"
+version = "1.9.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f4ffc801dacf156c5854b9df4f425a626539c3a6ef7893cc0c5084a23f0b6c59"
+dependencies = [
+ "atty",
+ "lazy_static",
+ "winapi",
+]
+
+[[package]]
 name = "core-foundation"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -238,6 +260,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "difference"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "524cbf6897b527295dff137cec09ecf3a05f4fddffd7dfcd1585403449e74198"
+
+[[package]]
 name = "digest"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -254,6 +282,18 @@ checksum = "d3dd60d1080a57a05ab032377049e0591415d2b31afd7028356dbf3cc6dcb066"
 dependencies = [
  "generic-array 0.14.4",
 ]
+
+[[package]]
+name = "dotenv"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "77c90badedccf4105eca100756a0b1289e191f6fcbdadd3cee1d2f614f97da8f"
+
+[[package]]
+name = "dtoa"
+version = "0.4.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "88d7ed2934d741c6b37e33e3832298e8850b53fd2d2bea03873375596c7cea4e"
 
 [[package]]
 name = "either"
@@ -290,6 +330,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3f47e0157f2cb54f5ae1bd371b30a2ae4311e1c028f575cd4e81de7353215965"
 dependencies = [
  "serde",
+]
+
+[[package]]
+name = "extend"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f47da3a72ec598d9c8937a7ebca8962a5c7a1f28444e38c2b33c771ba3f55f05"
+dependencies = [
+ "proc-macro-error",
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -818,6 +870,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "mockito"
+version = "0.28.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "36a0eb7e686b49b02c1cb87c14b8e2a05de0d36c6eee0293653d0a875906d499"
+dependencies = [
+ "assert-json-diff",
+ "colored",
+ "difference",
+ "httparse",
+ "lazy_static",
+ "log",
+ "rand 0.7.3",
+ "regex",
+ "serde_json",
+ "serde_urlencoded 0.6.1",
+]
+
+[[package]]
 name = "multipart"
 version = "0.17.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1049,6 +1119,30 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ac74c624d6b2d21f425f752262f42188365d7b8ff1aff74c82e45136510a4857"
 
 [[package]]
+name = "proc-macro-error"
+version = "1.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "da25490ff9892aab3fcf7c36f08cfb902dd3e71ca0f9f9517bea02a73a5ce38c"
+dependencies = [
+ "proc-macro-error-attr",
+ "proc-macro2",
+ "quote",
+ "syn",
+ "version_check",
+]
+
+[[package]]
+name = "proc-macro-error-attr"
+version = "1.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a1be40180e52ecc98ad80b184934baf3d0d29f979574e439af5a55274b35f869"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "version_check",
+]
+
+[[package]]
 name = "proc-macro-hack"
 version = "0.5.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1235,7 +1329,7 @@ dependencies = [
  "rustls",
  "serde",
  "serde_json",
- "serde_urlencoded",
+ "serde_urlencoded 0.7.0",
  "tokio",
  "tokio-native-tls",
  "tokio-rustls",
@@ -1391,6 +1485,18 @@ dependencies = [
 
 [[package]]
 name = "serde_urlencoded"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9ec5d77e2d4c73717816afac02670d5c4f534ea95ed430442cad02e7a6e32c97"
+dependencies = [
+ "dtoa",
+ "itoa",
+ "serde",
+ "url",
+]
+
+[[package]]
+name = "serde_urlencoded"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "edfa57a7f8d9c1d260a549e7224100f6c43d43f9103e06dd8b4095a9b2b43ce9"
@@ -1511,26 +1617,31 @@ dependencies = [
 [[package]]
 name = "tgbot"
 version = "0.12.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0d37ade7b9c3bac9af4b0ad6dba8c7cf713ebdd3a5532f10e20d427fc8e372c6"
 dependencies = [
  "async-stream 0.2.1",
  "async-trait",
  "bytes",
  "derive_more",
+ "dotenv",
+ "env_logger",
  "futures-util",
  "http",
  "hyper",
  "log",
  "mime",
  "mime_guess",
+ "mockito",
+ "regex",
  "reqwest",
  "serde",
  "serde_json",
  "shellwords",
+ "tempfile",
  "tokio",
  "tokio-util",
+ "toml",
  "url",
+ "vec1",
 ]
 
 [[package]]
@@ -1692,6 +1803,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "toml"
+version = "0.5.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a31142970826733df8241ef35dc040ef98c679ab14d7c3e54d827099b3acecaa"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "tower-service"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1838,6 +1958,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b00bca6106a5e23f3eee943593759b7fcddb00554332e856d990c893966879fb"
 
 [[package]]
+name = "vec1"
+version = "1.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f2fffd117bafd8d50c625cce64efde70f416ce6d38f78104035a0913cf15fe97"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "version_check"
 version = "0.9.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1873,7 +2002,7 @@ dependencies = [
  "scoped-tls",
  "serde",
  "serde_json",
- "serde_urlencoded",
+ "serde_urlencoded 0.7.0",
  "tokio",
  "tokio-stream",
  "tokio-tungstenite",

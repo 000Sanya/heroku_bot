@@ -39,7 +39,7 @@ fn pixiv_handler( pixiv_receiver: Addr<PixivReceiveActor>, mut body: impl warp::
 #[tokio::main]
 async fn main() {
     let config = config::get_config();
-    env::set_var("RUST_LOG", "heroku_bot=trace,atc_zero=warn");
+    env::set_var("RUST_LOG", "heroku_bot=trace,atc_zero=warn,tgbot=trace");
     env_logger::init();
     log::trace!("TEST");
 

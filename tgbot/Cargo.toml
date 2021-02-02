@@ -1,0 +1,43 @@
+[package]
+name = "tgbot"
+description = "A Telegram Bot library"
+version = "0.12.1"
+authors = ["Ross Nomann <rossnomann@protonmail.com>"]
+edition = "2018"
+readme = "README.md"
+license = "MIT"
+documentation = "https://docs.rs/tgbot"
+repository = "https://github.com/tg-rs/tgbot"
+
+[dependencies]
+async-stream = "0.2"
+async-trait = "0.1"
+bytes = "1.0"
+derive_more = "0.99"
+futures-util = "0.3"
+http = "0.2"
+hyper = { version = "0.14", features = ["server"] }
+log = "0.4"
+mime = "0.3"
+mime_guess = "2.0"
+reqwest = { version = "0.11", default-features = false, features = ["json", "multipart", "socks", "rustls-tls", "stream"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+shellwords = "1.1"
+tokio = { version = "1.0", features = ["fs", "sync", "time"] }
+tokio-util = { version = "0.6", features = ["codec"] }
+url = "2.2"
+vec1 = { version = "1.6.0", features = ["serde"] }
+
+[dev-dependencies]
+dotenv = "0.15"
+env_logger = "0.8"
+mockito = "0.28"
+regex = "1.4"
+tempfile = "3.1"
+tokio = {version = "1.0", features = ["fs", "io-util", "macros", "rt-multi-thread"]}
+toml = "0.5"
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "nightly"]
