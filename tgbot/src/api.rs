@@ -91,7 +91,7 @@ impl Api {
         } else {
             builder.no_proxy()
         };
-        let client = builder.use_rustls_tls().build().map_err(ApiError::BuildClient)?;
+        let client = builder.connection_verbose(true).use_rustls_tls().build().map_err(ApiError::BuildClient)?;
 
         Ok(Api {
             client,
