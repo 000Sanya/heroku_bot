@@ -81,6 +81,10 @@ impl ImageSender for TelegramSenderActor {
                 for album in images.chunks(10) {
                     let docs = album
                         .iter()
+                        .map(|i| {
+                            log::warn!("{:x}", md5::compute(&i.data));
+                            i
+                        })
                         .map(|i| image_as_input_file(i))
                         .fold(MediaGroup::default(), |media, file| {
                             media.add_item(file, InputMediaDocument::default())
