@@ -77,11 +77,7 @@ impl ImageSender for TelegramSenderActor {
                         .log_on_error("Error on send media group")?;
 
                     log::info!("Sended {} image from {}", album.len(), request.source);
-                }
 
-                tokio::time::sleep(Duration::from_millis(1500)).await;
-
-                for album in images.chunks(10) {
                     let docs = album
                         .iter()
                         .map(|i| {
