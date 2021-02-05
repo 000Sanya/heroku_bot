@@ -62,23 +62,6 @@ impl ImageSender for TelegramSenderActor {
             }
             ImageRequestBody::Album { images } => {
                 for album in images.chunks(10) {
-                    let media = album
-                        .iter()
-                        .map(|i| image_as_input_file(i))
-                        .fold(MediaGroup::default(), |media, file| {
-                            media.add_item(file, InputMediaPhoto::default())
-                        });
-
-                    let method = SendMediaGroup::new(self.config.telegram_target, media)
-                        .log_on_error("Error on compile media group")?;
-
-                    self.bot.execute(method).await
-                        .log_on_error("Error on send media group")?;
-
-                    log::info!("Sended {} image from {}", album.len(), request.source);
-                }
-
-                for album in images.chunks(10) {
                     let docs = album
                         .iter()
                         .map(|i| {
@@ -97,6 +80,23 @@ impl ImageSender for TelegramSenderActor {
 
 
                     log::info!("Sended {} docs from {}", album.len(), request.source);
+                }
+
+                for album in images.chunks(10) {
+                    let media = album
+                        .iter()
+                        .map(|i| image_as_input_file(i))
+                        .fold(MediaGroup::default(), |media, file| {
+                            media.add_item(file, InputMediaPhoto::default())
+                        });
+
+                    let method = SendMediaGroup::new(self.config.telegram_target, media)
+                        .log_on_error("Error on compile media group")?;
+
+                    self.bot.execute(method).await
+                        .log_on_error("Error on send media group")?;
+
+                    log::info!("Sended {} image from {}", album.len(), request.source);
                 }
             }
         }
