@@ -79,7 +79,7 @@ impl ImageSender for TelegramSenderActor {
                     log::info!("Sended {} image from {}", album.len(), request.source);
                 }
 
-                tokio::time::sleep(Duration::from_millis(250)).await;
+                tokio::time::sleep(Duration::from_millis(1500)).await;
 
                 for album in images.chunks(10) {
                     let docs = album
