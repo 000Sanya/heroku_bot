@@ -104,6 +104,7 @@ impl ImageSender for TelegramSenderActor {
             ImageRequestBody::Album { images } => {
                 for album in images.chunks(10) {
                     self.upload_docs(album, request.source.as_str()).await?;
+                    self.upload_docs(album, request.source.as_str()).await?;
                     self.upload_images(album, request.source.as_str()).await?;
                 }
             }
