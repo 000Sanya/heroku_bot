@@ -11,7 +11,6 @@ use tokio::time::Duration;
 
 pub struct TelegramSenderActor {
     bot: teloxide_core::Bot,
-    bot2: teloxide_core::Bot,
     config: Arc<Config>,
 }
 
@@ -33,13 +32,15 @@ impl Actor for TelegramSenderActor {
 
 impl TelegramSenderActor {
     pub fn new(config: Arc<Config>) -> Self {
-        let bot = teloxide_core::Bot::new(&config.telegram_token)
+        let client = reqwest::Client::builder()
+            .connection_verbose(true)
+            .build()
+            .expect("Erron on build client");
+
+        let bot = teloxide_core::Bot::with_client(&config.telegram_token, client)
             .set_api_url(reqwest::Url::parse(config.telegram_host.as_str()).expect("WTF"));
 
-        let bot2 = teloxide_core::Bot::new(&config.telegram_token)
-            .set_api_url(reqwest::Url::parse(config.telegram_host.as_str()).expect("WTF"));
-
-        Self { config, bot, bot2 }
+        Self { config, bot}
     }
 
     #[inline(never)]
@@ -71,7 +72,7 @@ impl TelegramSenderActor {
             .collect();
 
         let file_ids: Vec<_> = self
-            .bot2
+            .bot
             .send_media_group(self.config.telegram_target, media)
             .send()
             .await?
@@ -114,7 +115,7 @@ impl ImageSender for TelegramSenderActor {
                     .await?;
 
                 self
-                    .bot2
+                    .bot
                     .send_document(self.config.telegram_target, file)
                     .send()
                     .await?;
