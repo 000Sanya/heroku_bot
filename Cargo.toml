@@ -28,6 +28,10 @@ rand = "0.8.2"
 md5 = "0.7.0"
 teloxide-core = { git = "https://github.com/teloxide/teloxide-core.git" }
 
+[profile.release]
+opt-level = 1
+lto = true
+
 [workspace]
 members = [
     "pixiv_api",

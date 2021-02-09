@@ -119,7 +119,6 @@ impl ImageSender for TelegramSenderActor {
                     .send()
                     .await?;
 
-
                 log::info!("Sended one image from {}", request.source);
             }
             ImageRequestBody::Album { images } => {
