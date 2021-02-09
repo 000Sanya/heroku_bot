@@ -1,4 +1,4 @@
-use crate::request::{ImageSender, ImageRequest};
+use crate::request::{ImageRequest, ImageSender};
 use act_zero::{send, Actor, ActorResult, Addr, Produces};
 use std::sync::Arc;
 

@@ -1,10 +1,10 @@
 use crate::config::Config;
-use crate::request::{Image, ImageRequestBody, ImageRequest};
+use crate::processor::RequestProcessorActor;
+use crate::request::{Image, ImageRequest, ImageRequestBody};
 use act_zero::{Actor, ActorResult, Addr, Produces};
 use futures::future::join_all;
 use pixiv_api::PixivClient;
 use std::sync::Arc;
-use crate::processor::RequestProcessorActor;
 
 pub struct PixivReceiveActor {
     client: PixivClient,
@@ -12,17 +12,21 @@ pub struct PixivReceiveActor {
     processor: Addr<RequestProcessorActor>,
 }
 
-impl Actor for PixivReceiveActor {
-}
+impl Actor for PixivReceiveActor {}
 
 impl PixivReceiveActor {
     pub async fn new(config: Arc<Config>, processor: Addr<RequestProcessorActor>) -> Self {
         let mut client = PixivClient::new();
-        client.auth(
-            &config.pixiv_username, &config.pixiv_password
-        ).await.expect("Error on connect to pixiv");
+        client
+            .auth(&config.pixiv_username, &config.pixiv_password)
+            .await
+            .expect("Error on connect to pixiv");
 
-        Self { config, client, processor }
+        Self {
+            config,
+            client,
+            processor,
+        }
     }
 
     pub async fn receive_illust(&self, id: i64) -> ActorResult<()> {
@@ -45,19 +49,17 @@ impl PixivReceiveActor {
 
         log::info!("Downloaded {} images", images.len());
 
-        let req = ImageRequest{
+        let req = ImageRequest {
             source: format!("https://www.pixiv.net/en/artworks/{}", id),
             body: if images.len() > 1 {
-                ImageRequestBody::Album {
-                    images,
-                }
+                ImageRequestBody::Album { images }
             } else if images.len() == 1 {
                 ImageRequestBody::SingleImage {
                     image: images.into_iter().next().unwrap(),
                 }
             } else {
                 Err("Downloaded incorrect images")?
-            }
+            },
         };
 
         act_zero::send!(self.processor.handle_request(req));

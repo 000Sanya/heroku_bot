@@ -1,12 +1,12 @@
-use std::sync::Arc;
 use crate::config::Config;
+use crate::request::{Image, ImageRequest, ImageRequestBody, ImageSender};
+use crate::utils::ResultExtension;
 use act_zero::{Actor, ActorResult, Produces};
-use crate::request::{ImageSender, ImageRequest, Image, ImageRequestBody};
-use serde::{Serialize, Deserialize};
 use itertools::Itertools;
 use rand::RngCore;
+use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
-use crate::utils::ResultExtension;
+use std::sync::Arc;
 
 pub struct VkSenderActor {
     config: Arc<Config>,
@@ -15,9 +15,7 @@ pub struct VkSenderActor {
 
 impl VkSenderActor {
     pub fn new(config: Arc<Config>) -> Self {
-        let api = rvk::APIClient::new(
-            config.vk_bot_token.clone()
-        );
+        let api = rvk::APIClient::new(config.vk_bot_token.clone());
 
         Self { config, api }
     }
@@ -43,17 +41,16 @@ impl ImageSender for VkSenderActor {
         };
 
         let url = get_upload_server(&self.api, self.config.vk_target).await?;
-        let images: Vec<_> = futures::future::join_all(
-            images.into_iter()
-                .map(|i| upload_photo(&self.api, &url, i))
-        )
-            .await
-            .into_iter()
-            .filter_map(|i| i.log_on_error("Error on photo upload").ok())
-            .collect();
+        let images: Vec<_> =
+            futures::future::join_all(images.into_iter().map(|i| upload_photo(&self.api, &url, i)))
+                .await
+                .into_iter()
+                .filter_map(|i| i.log_on_error("Error on photo upload").ok())
+                .collect();
 
         for imgs in images.chunks(10) {
-            let attachment = imgs.iter()
+            let attachment = imgs
+                .iter()
                 .map(|img| format!("photo{}_{}", img[0].owner_id, img[0].id))
                 .join(",");
 
@@ -63,10 +60,7 @@ impl ImageSender for VkSenderActor {
                 "random_id".into() => rand::thread_rng().next_u64().to_string()
             };
 
-            rvk::methods::messages::send::<serde_json::Value>(
-                &self.api,
-                params
-            ).await?;
+            rvk::methods::messages::send::<serde_json::Value>(&self.api, params).await?;
         }
 
         Produces::ok(())
@@ -78,22 +72,25 @@ async fn get_upload_server(client: &rvk::APIClient, peer_id: i64) -> anyhow::Res
         "peer_id".into() => peer_id.to_string()
     };
 
-    let result = rvk::methods::photos::get_messages_upload_server::<GetUploadServer>(
-        client, params
-    ).await?;
+    let result =
+        rvk::methods::photos::get_messages_upload_server::<GetUploadServer>(client, params).await?;
 
     Ok(result.upload_url)
 }
 
-async fn upload_photo(api: &rvk::APIClient, upload_url: &str, image: &Image) -> anyhow::Result<Vec<Photo>> {
+async fn upload_photo(
+    api: &rvk::APIClient,
+    upload_url: &str,
+    image: &Image,
+) -> anyhow::Result<Vec<Photo>> {
     let client = reqwest::Client::new();
-    let form = reqwest::multipart::Form::new()
-        .part(
-            "file",
-            reqwest::multipart::Part::bytes(image.data.as_ref().to_owned())
-                .file_name(image.filename.clone())
-        );
-    let result: UploadResult = client.post(upload_url)
+    let form = reqwest::multipart::Form::new().part(
+        "file",
+        reqwest::multipart::Part::bytes(image.data.as_ref().to_owned())
+            .file_name(image.filename.clone()),
+    );
+    let result: UploadResult = client
+        .post(upload_url)
         .multipart(form)
         .send()
         .await
@@ -101,19 +98,18 @@ async fn upload_photo(api: &rvk::APIClient, upload_url: &str, image: &Image) -> 
         .json()
         .await?;
 
-    Ok(rvk::methods::photos::save_messages_photo::<serde_json::Value>(
-        api,
-        maplit::hashmap! {
-            "hash".into() => result.hash,
-            "server".into() => result.server.to_string(),
-            "photo".into() => result.photo,
-        }
-    )
+    Ok(
+        rvk::methods::photos::save_messages_photo::<serde_json::Value>(
+            api,
+            maplit::hashmap! {
+                "hash".into() => result.hash,
+                "server".into() => result.server.to_string(),
+                "photo".into() => result.photo,
+            },
+        )
         .await
-        .and_then(|photo| {
-            Ok(serde_json::from_value::<Vec<Photo>>(photo)?)
-        })
-        .log_on_error("Error on save photo")?
+        .and_then(|photo| Ok(serde_json::from_value::<Vec<Photo>>(photo)?))
+        .log_on_error("Error on save photo")?,
     )
 }
 
@@ -121,7 +117,7 @@ async fn upload_photo(api: &rvk::APIClient, upload_url: &str, image: &Image) -> 
 struct GetUploadServer {
     upload_url: String,
     album_id: i64,
-    user_id: i64
+    user_id: i64,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
