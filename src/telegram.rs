@@ -11,6 +11,7 @@ use tokio::time::Duration;
 
 pub struct TelegramSenderActor {
     bot: teloxide_core::Bot,
+    bot2: teloxide_core::Bot,
     config: Arc<Config>,
 }
 
@@ -21,9 +22,6 @@ impl Actor for TelegramSenderActor {
         Self: Sized,
     {
         log::info!("Start Telegram actor");
-
-        dbg!(self.bot.get_me().send().await);
-
         Produces::ok(())
     }
 
@@ -38,7 +36,10 @@ impl TelegramSenderActor {
         let bot = teloxide_core::Bot::new(&config.telegram_token)
             .set_api_url(reqwest::Url::parse(config.telegram_host.as_str()).expect("WTF"));
 
-        Self { config, bot }
+        let bot2 = teloxide_core::Bot::new(&config.telegram_token)
+            .set_api_url(reqwest::Url::parse(config.telegram_host.as_str()).expect("WTF"));
+
+        Self { config, bot, bot2 }
     }
 
     #[inline(never)]
@@ -61,29 +62,6 @@ impl TelegramSenderActor {
     }
 
     #[inline(never)]
-    async fn upload_images_with_file_id(
-        &self,
-        file_ids: &[String],
-        request: &str,
-    ) -> ActorResult<()> {
-        let media: Vec<_> = file_ids
-            .iter()
-            .map(|file_id| teloxide_core::types::InputFile::FileId(file_id.clone()))
-            .map(|file| teloxide_core::types::InputMediaPhoto::new(file))
-            .map(|photo| teloxide_core::types::InputMedia::Photo(photo))
-            .collect();
-
-        self.bot
-            .send_media_group(self.config.telegram_target, media)
-            .send()
-            .await?;
-
-        log::info!("Sended {} image from {}", file_ids.len(), request);
-
-        Produces::ok(())
-    }
-
-    #[inline(never)]
     async fn upload_docs(&self, album: &[Image], request: &str) -> ActorResult<Vec<String>> {
         let media: Vec<_> = album
             .iter()
@@ -93,7 +71,7 @@ impl TelegramSenderActor {
             .collect();
 
         let file_ids: Vec<_> = self
-            .bot
+            .bot2
             .send_media_group(self.config.telegram_target, media)
             .send()
             .await?
@@ -127,28 +105,20 @@ impl ImageSender for TelegramSenderActor {
             ImageRequestBody::SingleImage { image } => {
                 let file = image_as_teloxide_file(image);
 
-                let message = self
-                    .bot
+                self.bot
+                    .send_photo(
+                        self.config.telegram_target,
+                        file.clone(),
+                    )
+                    .send()
+                    .await?;
+
+                self
+                    .bot2
                     .send_document(self.config.telegram_target, file)
                     .send()
                     .await?;
 
-                let file_id = match message.kind {
-                    MessageKind::Common(data) => match data.media_kind {
-                        MediaKind::Document(doc) => Some(doc.document.file_id),
-                        _ => None,
-                    },
-                    _ => None,
-                }
-                .unwrap();
-
-                self.bot
-                    .send_photo(
-                        self.config.telegram_target,
-                        teloxide_core::types::InputFile::FileId(file_id),
-                    )
-                    .send()
-                    .await?;
 
                 log::info!("Sended one image from {}", request.source);
             }
