@@ -40,7 +40,7 @@ impl TelegramSenderActor {
         let bot = teloxide_core::Bot::with_client(&config.telegram_token, client)
             .set_api_url(reqwest::Url::parse(config.telegram_host.as_str()).expect("WTF"));
 
-        Self { config, bot}
+        Self { config, bot }
     }
 
     #[inline(never)]
@@ -107,15 +107,11 @@ impl ImageSender for TelegramSenderActor {
                 let file = image_as_teloxide_file(image);
 
                 self.bot
-                    .send_photo(
-                        self.config.telegram_target,
-                        file.clone(),
-                    )
+                    .send_photo(self.config.telegram_target, file.clone())
                     .send()
                     .await?;
 
-                self
-                    .bot
+                self.bot
                     .send_document(self.config.telegram_target, file)
                     .send()
                     .await?;
@@ -124,11 +120,8 @@ impl ImageSender for TelegramSenderActor {
             }
             ImageRequestBody::Album { images } => {
                 for album in images.chunks(10) {
-                    self.upload_images(album, request.source.as_str())
-                        .await?;
-                    self
-                        .upload_docs(album, request.source.as_str())
-                        .await?;
+                    self.upload_images(album, request.source.as_str()).await?;
+                    self.upload_docs(album, request.source.as_str()).await?;
                 }
             }
         }

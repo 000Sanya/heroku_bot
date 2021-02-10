@@ -4,8 +4,7 @@ use std::sync::Arc;
 #[derive(Deserialize, Debug)]
 pub struct Config {
     pub telegram_token: String,
-    pub pixiv_username: String,
-    pub pixiv_password: String,
+    pub pixiv_phpssesid: String,
     pub telegram_target: i64,
     pub telegram_host: String,
     pub vk_bot_token: String,

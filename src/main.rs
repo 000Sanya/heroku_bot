@@ -11,6 +11,7 @@ use warp::Filter;
 
 mod config;
 mod pixiv;
+mod pixiv_ajax_api;
 mod processor;
 mod request;
 mod telegram;

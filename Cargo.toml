@@ -15,7 +15,6 @@ act-zero = { version = "0.4.0", features = ["tokio"] }
 log = "0.4.13"
 env_logger = "0.8.2"
 async-trait = "0.1.42"
-pixiv_api = { path = "pixiv_api" }
 envy = "0.4"
 futures = "0.3.12"
 regex = "1"
@@ -26,8 +25,4 @@ reqwest = { version = "0.11", features = ["json"] }
 itertools = "0.10"
 rand = "0.8.2"
 teloxide-core = { git = "https://github.com/teloxide/teloxide-core.git" }
-
-[workspace]
-members = [
-    "pixiv_api",
-]
+thiserror = "1.0"
