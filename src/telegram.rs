@@ -110,13 +110,17 @@ impl ImageSender for TelegramSenderActor {
 
                     self.upload_images(album, request.source.as_str()).await
                         .log_on_error("");
-                    self.upload_images(album, request.source.as_str()).await
-                        .log_on_error("");
 
-                    self.upload_docs(album, request.source.as_str()).await
-                        .log_on_error("");
-                    self.upload_docs(album, request.source.as_str()).await
-                        .log_on_error("");
+                    // self.upload_docs(album, request.source.as_str()).await
+                    //     .log_on_error("");
+                    for image in album {
+                        let file = image_as_teloxide_file(image);
+
+                        self.bot
+                            .send_document(self.config.telegram_target, file)
+                            .send()
+                            .await?;
+                    }
                 }
             }
         }
