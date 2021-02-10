@@ -3,7 +3,6 @@ FROM rust:1.49 AS build
 WORKDIR /usr/src/heroku_app
 COPY Cargo.toml Cargo.lock ./
 COPY src/  ./src
-COPY pixiv_api/  ./pixiv_api
 RUN cargo build --release
 RUN ls -la target/release
 
