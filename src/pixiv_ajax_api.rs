@@ -1,4 +1,5 @@
-use serde::{Deserialize, Serialize};
+use reqwest::header::{HeaderValue, COOKIE};
+use serde::Deserialize;
 use std::fmt::Debug;
 use thiserror::Error;
 
@@ -22,6 +23,10 @@ impl PixivAjaxClient {
                 "https://www.pixiv.net/ajax/illust/{}/pages?lang=en",
                 illust_id
             ))
+            .header(
+                COOKIE,
+                HeaderValue::from_str(&format!("PHPSESSID={}", self.phpssesid.as_str())).unwrap(),
+            )
             .send()
             .await?
             .json::<Response<Page>>()

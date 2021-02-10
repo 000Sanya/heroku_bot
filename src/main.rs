@@ -3,10 +3,9 @@ use crate::processor::RequestProcessorActor;
 use crate::telegram::TelegramSenderActor;
 use crate::vk::VkSenderActor;
 use act_zero::runtimes::tokio::spawn_actor;
-use act_zero::{call, send, upcast, Actor, ActorResult, Addr, Produces};
+use act_zero::{send, upcast, Addr};
 use std::env;
-use std::ops::Add;
-use std::time::Duration;
+
 use warp::Filter;
 
 mod config;
@@ -20,7 +19,7 @@ mod vk;
 
 fn pixiv_handler(
     pixiv_receiver: Addr<PixivReceiveActor>,
-    mut body: impl warp::Buf,
+    body: impl warp::Buf,
 ) -> Result<&'static str, Box<dyn std::error::Error>> {
     if body.has_remaining() {
         let body = String::from_utf8(body.chunk().to_vec())?;

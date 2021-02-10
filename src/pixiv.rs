@@ -8,7 +8,6 @@ use std::sync::Arc;
 
 pub struct PixivReceiveActor {
     client: PixivAjaxClient,
-    config: Arc<Config>,
     processor: Addr<RequestProcessorActor>,
 }
 
@@ -16,14 +15,10 @@ impl Actor for PixivReceiveActor {}
 
 impl PixivReceiveActor {
     pub async fn new(config: Arc<Config>, processor: Addr<RequestProcessorActor>) -> Self {
-        let mut client = PixivAjaxClient::new(config.pixiv_phpssesid.clone())
+        let client = PixivAjaxClient::new(config.pixiv_phpssesid.clone())
             .expect("Error on build PixivAjaxClient");
 
-        Self {
-            config,
-            client,
-            processor,
-        }
+        Self { client, processor }
     }
 
     pub async fn receive_illust(&self, id: i64) -> ActorResult<()> {
