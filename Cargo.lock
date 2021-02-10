@@ -528,6 +528,7 @@ dependencies = [
  "serde",
  "serde_json",
  "teloxide-core",
+ "tempfile",
  "thiserror",
  "tokio",
  "warp",

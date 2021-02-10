@@ -8,6 +8,8 @@ use std::sync::Arc;
 use teloxide_core::prelude::{Request, Requester};
 use teloxide_core::types::{MediaKind, MessageCommon, MessageKind};
 use tokio::time::Duration;
+use std::io::{self, Write};
+use tempfile::NamedTempFile;
 
 pub struct TelegramSenderActor {
     bot: teloxide_core::Bot,
@@ -63,10 +65,64 @@ impl TelegramSenderActor {
     }
 
     #[inline(never)]
+    async fn upload_images_as_file(&self, album: &[NamedTempFile], request: &str) -> ActorResult<()> {
+        let media: Vec<_> = album
+            .iter()
+            .map(|tempfile| {
+                let path = tempfile.path().to_owned();
+                teloxide_core::types::InputFile::file(path)
+            })
+            .map(|file| teloxide_core::types::InputMediaPhoto::new(file))
+            .map(|photo| teloxide_core::types::InputMedia::Photo(photo))
+            .collect();
+
+        self.bot
+            .send_media_group(self.config.telegram_target, media)
+            .send()
+            .await?;
+
+        log::info!("Sended {} image from {}", album.len(), request);
+
+        Produces::ok(())
+    }
+
+    #[inline(never)]
     async fn upload_docs(&self, album: &[Image], request: &str) -> ActorResult<Vec<String>> {
         let media: Vec<_> = album
             .iter()
             .map(image_as_teloxide_file_doc)
+            .map(teloxide_core::types::InputMediaDocument::new)
+            .map(|doc| teloxide_core::types::InputMedia::Document(doc))
+            .collect();
+
+        let file_ids: Vec<_> = self
+            .bot
+            .send_media_group(self.config.telegram_target, media)
+            .send()
+            .await?
+            .into_iter()
+            .filter_map(|mes| match mes.kind {
+                MessageKind::Common(data) => match data.media_kind {
+                    MediaKind::Document(doc) => Some(doc.document.file_id),
+                    _ => None,
+                },
+                _ => None,
+            })
+            .collect();
+
+        log::info!("Sended {} docs from {}", album.len(), request);
+
+        Produces::ok(file_ids)
+    }
+
+    #[inline(never)]
+    async fn upload_docs_as_file(&self, album: &[NamedTempFile], request: &str) -> ActorResult<Vec<String>> {
+        let media: Vec<_> = album
+            .iter()
+            .map(|tempfile| {
+                let path = tempfile.path().to_owned();
+                teloxide_core::types::InputFile::file(path)
+            })
             .map(teloxide_core::types::InputMediaDocument::new)
             .map(|doc| teloxide_core::types::InputMedia::Document(doc))
             .collect();
@@ -104,25 +160,35 @@ impl ImageSender for TelegramSenderActor {
 
         match &request.body {
             ImageRequestBody::SingleImage { image } => {
-                let file = image_as_teloxide_file(image);
-                let file_doc = image_as_teloxide_file_doc(image);
+                let mut tempfile = tempfile::NamedTempFile::new()?;
+                tempfile.write_all(image.data.as_ref())?;
+                let path = tempfile.path().to_owned();
+                let input_file = teloxide_core::types::InputFile::file(path);
 
                 self.bot
-                    .send_photo(self.config.telegram_target, file.clone())
+                    .send_photo(self.config.telegram_target, input_file.clone())
                     .send()
                     .await?;
 
                 self.bot
-                    .send_document(self.config.telegram_target, file_doc)
+                    .send_document(self.config.telegram_target, input_file)
                     .send()
                     .await?;
 
                 log::info!("Sended one image from {}", request.source);
             }
             ImageRequestBody::Album { images } => {
-                for album in images.chunks(10) {
-                    self.upload_images(album, request.source.as_str()).await?;
-                    self.upload_docs(album, request.source.as_str()).await?;
+                let files: Vec<_> = images
+                    .iter()
+                    .map(|image| {
+                        let mut tempfile = tempfile::NamedTempFile::new().unwrap();
+                        tempfile.write_all(image.data.as_ref()).unwrap();
+                        tempfile
+                    })
+                    .collect();
+                for album in files.chunks(10) {
+                    self.upload_images_as_file(album, request.source.as_str()).await?;
+                    self.upload_docs_as_file(album, request.source.as_str()).await?;
                 }
             }
         }
