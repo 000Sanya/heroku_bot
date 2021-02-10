@@ -66,7 +66,7 @@ impl TelegramSenderActor {
     async fn upload_docs(&self, album: &[Image], request: &str) -> ActorResult<Vec<String>> {
         let media: Vec<_> = album
             .iter()
-            .map(image_as_teloxide_file)
+            .map(image_as_teloxide_file_doc)
             .map(teloxide_core::types::InputMediaDocument::new)
             .map(|doc| teloxide_core::types::InputMedia::Document(doc))
             .collect();
@@ -105,6 +105,7 @@ impl ImageSender for TelegramSenderActor {
         match &request.body {
             ImageRequestBody::SingleImage { image } => {
                 let file = image_as_teloxide_file(image);
+                let file_doc = image_as_teloxide_file_doc(image);
 
                 self.bot
                     .send_photo(self.config.telegram_target, file.clone())
@@ -112,7 +113,7 @@ impl ImageSender for TelegramSenderActor {
                     .await?;
 
                 self.bot
-                    .send_document(self.config.telegram_target, file)
+                    .send_document(self.config.telegram_target, file_doc)
                     .send()
                     .await?;
 
@@ -127,6 +128,13 @@ impl ImageSender for TelegramSenderActor {
         }
 
         Produces::ok(())
+    }
+}
+
+fn image_as_teloxide_file_doc(image: &Image) -> teloxide_core::types::InputFile {
+    teloxide_core::types::InputFile::Memory {
+        file_name: format!("doc_{}", &image.filename),
+        data: Cow::from(image.data.to_vec()),
     }
 }
 
