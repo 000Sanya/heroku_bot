@@ -7,7 +7,9 @@ use act_zero::{send, upcast, Addr};
 use std::env;
 
 use warp::Filter;
+use crate::booru::ImageBoard;
 
+mod booru;
 mod config;
 mod pixiv;
 mod pixiv_ajax_api;
@@ -46,6 +48,13 @@ async fn main() {
     env::set_var("RUST_LOG", "heroku_bot=trace,atc_zero=warn");
     env_logger::init();
     log::trace!("TEST");
+
+    let danbooru = booru::danbooru::DanbooruApi::with_proxy(&config.proxy)
+        .unwrap();
+
+    dbg!(danbooru.fetch_by_tags(std::iter::empty(), 100).await);
+
+    return;
 
     let telegram_target = spawn_actor(TelegramSenderActor::new(config.clone()));
 

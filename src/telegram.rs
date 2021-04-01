@@ -1,10 +1,10 @@
 use crate::config::Config;
 use crate::request::{Image, ImageRequest, ImageRequestBody, ImageSender};
+use crate::utils::ResultExtension;
 use act_zero::{Actor, ActorError, ActorResult, Addr, Produces};
 use std::borrow::Cow;
 use std::sync::Arc;
 use teloxide_core::prelude::{Request, Requester};
-use crate::utils::ResultExtension;
 
 pub struct TelegramSenderActor {
     bot: teloxide_core::Bot,
@@ -107,8 +107,8 @@ impl ImageSender for TelegramSenderActor {
             }
             ImageRequestBody::Album { images } => {
                 for album in images.chunks(10) {
-
-                    self.upload_images(album, request.source.as_str()).await
+                    self.upload_images(album, request.source.as_str())
+                        .await
                         .log_on_error("");
 
                     // self.upload_docs(album, request.source.as_str()).await

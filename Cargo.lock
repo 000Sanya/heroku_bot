@@ -161,25 +161,8 @@ version = "0.14.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "784ad0fbab4f3e9cef09f20e0aea6000ae08d2cb98ac4c0abc53df18803d702f"
 dependencies = [
- "percent-encoding",
  "time 0.2.25",
  "version_check",
-]
-
-[[package]]
-name = "cookie_store"
-version = "0.12.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3818dfca4b0cb5211a659bbcbb94225b7127407b2b135e650d717bfb78ab10d3"
-dependencies = [
- "cookie",
- "idna",
- "log",
- "publicsuffix",
- "serde",
- "serde_json",
- "time 0.2.25",
- "url",
 ]
 
 [[package]]
@@ -309,15 +292,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3f47e0157f2cb54f5ae1bd371b30a2ae4311e1c028f575cd4e81de7353215965"
 dependencies = [
  "serde",
-]
-
-[[package]]
-name = "error-chain"
-version = "0.12.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2d2f06b9cac1506ece98fe3231e3cc9c4410ec3d5b1f24ae1c8946f0742cdefc"
-dependencies = [
- "version_check",
 ]
 
 [[package]]
@@ -576,6 +550,7 @@ dependencies = [
  "itertools",
  "log",
  "maplit",
+ "once_cell",
  "rand 0.8.3",
  "regex",
  "reqwest",
@@ -1055,19 +1030,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "publicsuffix"
-version = "1.5.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3bbaa49075179162b49acac1c6aa45fb4dafb5f13cf6794276d77bc7fd95757b"
-dependencies = [
- "error-chain",
- "idna",
- "lazy_static",
- "regex",
- "url",
-]
-
-[[package]]
 name = "quick-error"
 version = "1.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1213,8 +1175,6 @@ checksum = "fd281b1030aa675fb90aa994d07187645bb3c8fc756ca766e7c3070b439de9de"
 dependencies = [
  "base64",
  "bytes",
- "cookie",
- "cookie_store",
  "encoding_rs",
  "futures-core",
  "futures-util",
@@ -1234,9 +1194,9 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_urlencoded",
- "time 0.2.25",
  "tokio",
  "tokio-native-tls",
+ "tokio-socks",
  "url",
  "wasm-bindgen",
  "wasm-bindgen-futures",
@@ -1709,6 +1669,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f7d995660bd2b7f8c1568414c1126076c13fbb725c40112dc0120b78eb9b717b"
 dependencies = [
  "native-tls",
+ "tokio",
+]
+
+[[package]]
+name = "tokio-socks"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "51165dfa029d2a65969413a6cc96f354b86b464498702f174a4efa13608fd8c0"
+dependencies = [
+ "either",
+ "futures-util",
+ "thiserror",
  "tokio",
 ]
 

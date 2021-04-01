@@ -9,6 +9,7 @@ pub struct Config {
     pub telegram_host: String,
     pub vk_bot_token: String,
     pub vk_target: i64,
+    pub proxy: String,
 }
 
 pub fn get_config() -> Arc<Config> {
