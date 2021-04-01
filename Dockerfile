@@ -1,16 +1,9 @@
-FROM rust:1.49 AS build
-
-WORKDIR /usr/src/heroku_app
-COPY Cargo.toml Cargo.lock ./
-COPY src/  ./src
-RUN cargo build --release
-RUN ls -la target/release
-
 FROM debian:buster
 
-RUN apt-get update; \
+RUN apt-get update && \
     apt-get install -y libssl1.1 ca-certificates
 RUN update-ca-certificates
-COPY --from=build /usr/src/heroku_app/target/release/heroku_bot .
+COPY target/release/heroku_bot /bot
+RUN chown -R 1000:1000 /bot
 USER 1000
-CMD ["./heroku_bot"]
+ENTRYPOINT ["/bot/heroku_bot"]
