@@ -40,7 +40,6 @@ impl TelegramSenderActor {
         Self { config, bot }
     }
 
-    #[inline(never)]
     async fn upload_images(&self, album: &[Image], request: &str) -> ActorResult<()> {
         let media: Vec<_> = album
             .iter()
@@ -58,25 +57,6 @@ impl TelegramSenderActor {
 
         Produces::ok(())
     }
-
-    #[inline(never)]
-    async fn upload_docs(&self, album: &[Image], request: &str) -> ActorResult<()> {
-        let media: Vec<_> = album
-            .iter()
-            .map(image_as_teloxide_file)
-            .map(teloxide_core::types::InputMediaDocument::new)
-            .map(|doc| teloxide_core::types::InputMedia::Document(doc))
-            .collect();
-
-        self.bot
-            .send_media_group(self.config.telegram_target, media)
-            .send()
-            .await?;
-
-        log::info!("Sended {} docs from {}", album.len(), request);
-
-        Produces::ok(())
-    }
 }
 
 #[async_trait::async_trait]
@@ -87,21 +67,25 @@ impl ImageSender for TelegramSenderActor {
         self.bot
             .send_message(self.config.telegram_target, &request.source)
             .send()
-            .await?;
+            .await
+            .log_on_error("Error on send message");
 
         match &request.body {
             ImageRequestBody::SingleImage { image } => {
-                let file = image_as_teloxide_file(image);
+                let file = image_as_teloxide_doc_file(image);
+                let image_file = image_as_teloxide_file(image);
 
                 self.bot
-                    .send_photo(self.config.telegram_target, file.clone())
+                    .send_photo(self.config.telegram_target, image_file)
                     .send()
-                    .await?;
+                    .await
+                    .log_on_error("Error on upload as image");
 
                 self.bot
                     .send_document(self.config.telegram_target, file)
                     .send()
-                    .await?;
+                    .await
+                    .log_on_error("Error on upload as document");
 
                 log::info!("Sended one image from {}", request.source);
             }
@@ -109,17 +93,16 @@ impl ImageSender for TelegramSenderActor {
                 for album in images.chunks(10) {
 
                     self.upload_images(album, request.source.as_str()).await
-                        .log_on_error("");
+                        .log_on_error("Error on upload as image");
 
-                    // self.upload_docs(album, request.source.as_str()).await
-                    //     .log_on_error("");
                     for image in album {
-                        let file = image_as_teloxide_file(image);
+                        let file = image_as_teloxide_doc_file(image);
 
                         self.bot
                             .send_document(self.config.telegram_target, file)
                             .send()
-                            .await?;
+                            .await
+                            .log_on_error("Error on upload as document");
                     }
                 }
             }
@@ -130,6 +113,20 @@ impl ImageSender for TelegramSenderActor {
 }
 
 fn image_as_teloxide_file(image: &Image) -> teloxide_core::types::InputFile {
+    let file_name = image.filename.clone();
+    let image = image::load_from_memory(image.data.as_ref()).expect("Error on load image");
+    let mut buffer = Vec::new();
+    let mut encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(&mut buffer, 90);
+    encoder.encode_image(&image)
+        .expect("Error on encode image");
+
+    teloxide_core::types::InputFile::Memory {
+        file_name,
+        data: Cow::from(buffer),
+    }
+}
+
+fn image_as_teloxide_doc_file(image: &Image) -> teloxide_core::types::InputFile {
     teloxide_core::types::InputFile::Memory {
         file_name: image.filename.clone(),
         data: Cow::from(image.data.to_vec()),

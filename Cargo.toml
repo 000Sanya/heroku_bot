@@ -27,3 +27,4 @@ itertools = "0.10"
 rand = "0.8.2"
 teloxide-core = { git = "https://github.com/teloxide/teloxide-core.git" }
 thiserror = "1.0"
+image = "0.23"
