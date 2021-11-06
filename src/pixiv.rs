@@ -1,11 +1,11 @@
 use crate::config::Config;
+use crate::pixiv_js_api::PixivJsApi;
 use crate::processor::RequestProcessorActor;
 use crate::request::{Image, ImageRequest, ImageRequestBody};
+use crate::utils::ResultExtension;
 use act_zero::{Actor, ActorResult, Addr, Produces};
 use futures::future::join_all;
 use std::sync::Arc;
-use crate::pixiv_js_api::PixivJsApi;
-use crate::utils::ResultExtension;
 
 pub struct PixivReceiveActor {
     client2: PixivJsApi,
@@ -16,15 +16,15 @@ impl Actor for PixivReceiveActor {}
 
 impl PixivReceiveActor {
     pub async fn new(_config: Arc<Config>, processor: Addr<RequestProcessorActor>) -> Self {
-        let client2 = PixivJsApi::new()
-            .expect("Error on build PixivAjaxClient");
+        let client2 = PixivJsApi::new().expect("Error on build PixivAjaxClient");
 
         Self { client2, processor }
     }
 
     pub async fn receive_illust(&self, id: i64) -> ActorResult<()> {
         log::info!("Start process {}", id);
-        let illust = self.client2
+        let illust = self
+            .client2
             .pages(id)
             .await
             .log_on_error("Error on get illust")?;

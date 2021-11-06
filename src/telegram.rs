@@ -1,10 +1,10 @@
 use crate::config::Config;
 use crate::request::{Image, ImageRequest, ImageRequestBody, ImageSender};
+use crate::utils::ResultExtension;
 use act_zero::{Actor, ActorError, ActorResult, Addr, Produces};
 use std::borrow::Cow;
 use std::sync::Arc;
 use teloxide_core::prelude::{Request, Requester};
-use crate::utils::ResultExtension;
 
 pub struct TelegramSenderActor {
     bot: teloxide_core::Bot,
@@ -64,7 +64,8 @@ impl ImageSender for TelegramSenderActor {
     async fn handle_request(&mut self, request: Arc<ImageRequest>) -> ActorResult<()> {
         log::info!("Handle request from {}", request.source);
 
-        let _ = self.bot
+        let _ = self
+            .bot
             .send_message(self.config.telegram_target, &request.source)
             .send()
             .await
@@ -75,13 +76,15 @@ impl ImageSender for TelegramSenderActor {
                 let file = image_as_teloxide_doc_file(image);
                 let image_file = image_as_teloxide_file(image);
 
-                let _ = self.bot
+                let _ = self
+                    .bot
                     .send_photo(self.config.telegram_target, image_file)
                     .send()
                     .await
                     .log_on_error("Error on upload as image");
 
-                let _ = self.bot
+                let _ = self
+                    .bot
                     .send_document(self.config.telegram_target, file)
                     .send()
                     .await
@@ -91,14 +94,16 @@ impl ImageSender for TelegramSenderActor {
             }
             ImageRequestBody::Album { images } => {
                 for album in images.chunks(10) {
-
-                    let _ = self.upload_images(album, request.source.as_str()).await
+                    let _ = self
+                        .upload_images(album, request.source.as_str())
+                        .await
                         .log_on_error("Error on upload as image");
 
                     for image in album {
                         let file = image_as_teloxide_doc_file(image);
 
-                        let _ = self.bot
+                        let _ = self
+                            .bot
                             .send_document(self.config.telegram_target, file)
                             .send()
                             .await
@@ -117,8 +122,7 @@ fn image_as_teloxide_file(image: &Image) -> teloxide_core::types::InputFile {
     let image = image::load_from_memory(image.data.as_ref()).expect("Error on load image");
     let mut buffer = Vec::new();
     let mut encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(&mut buffer, 90);
-    encoder.encode_image(&image)
-        .expect("Error on encode image");
+    encoder.encode_image(&image).expect("Error on encode image");
 
     teloxide_core::types::InputFile::Memory {
         file_name,

@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use thiserror::Error;
 
@@ -66,23 +66,20 @@ impl PixivJsApi {
     }
 
     pub async fn pages(&self, illust_id: i64) -> Result<Vec<Page>, PixivJsError> {
-        let illusts = self.client
-            .get(
-                &format!(
-                    "https://pixiv.js.org/api/illust/{}", illust_id
-                )
-            )
+        let illusts = self
+            .client
+            .get(&format!("https://pixiv.js.org/api/illust/{}", illust_id))
             .send()
             .await?;
 
-        let illusts = illusts.json::<Illust>()
-            .await?;
+        let illusts = illusts.json::<Illust>().await?;
 
         Ok(illusts.pages)
     }
 
     pub async fn download(&self, url: &str) -> Result<(String, Vec<u8>), PixivJsError> {
-        let url = url.replace("/-/", "https://i.pximg.net/")
+        let url = url
+            .replace("/-/", "https://i.pximg.net/")
             .replace("/~/", "https://s.pximg.net/");
 
         let res = self
