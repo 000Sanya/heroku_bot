@@ -3,3 +3,4 @@
 .env
 env.bat
 /docker/heroku_bot
+heroku_bot.db

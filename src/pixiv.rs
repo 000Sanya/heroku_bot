@@ -5,30 +5,35 @@ use crate::request::{Image, ImageRequest, ImageRequestBody};
 use act_zero::{Actor, ActorResult, Addr, Produces};
 use futures::future::join_all;
 use std::sync::Arc;
+use crate::pixiv_js_api::PixivJsApi;
+use crate::utils::ResultExtension;
 
 pub struct PixivReceiveActor {
-    client: PixivAjaxClient,
+    client2: PixivJsApi,
     processor: Addr<RequestProcessorActor>,
 }
 
 impl Actor for PixivReceiveActor {}
 
 impl PixivReceiveActor {
-    pub async fn new(config: Arc<Config>, processor: Addr<RequestProcessorActor>) -> Self {
-        let client = PixivAjaxClient::new(config.pixiv_phpssesid.clone())
+    pub async fn new(_config: Arc<Config>, processor: Addr<RequestProcessorActor>) -> Self {
+        let client2 = PixivJsApi::new()
             .expect("Error on build PixivAjaxClient");
 
-        Self { client, processor }
+        Self { client2, processor }
     }
 
     pub async fn receive_illust(&self, id: i64) -> ActorResult<()> {
         log::info!("Start process {}", id);
-        let illust = self.client.pages(id).await?;
+        let illust = self.client2
+            .pages(id)
+            .await
+            .log_on_error("Error on get illust")?;
         log::info!("{:?}", &illust);
         let images: Vec<_> = join_all(
             illust
                 .iter()
-                .map(|s| self.client.download(&s.urls.original))
+                .map(|s| self.client2.download(&s.urls.original))
                 .collect::<Vec<_>>(),
         )
         .await
