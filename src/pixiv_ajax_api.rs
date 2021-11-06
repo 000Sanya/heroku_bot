@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use reqwest::header::{HeaderValue, COOKIE};
 use serde::Deserialize;
 use std::fmt::Debug;

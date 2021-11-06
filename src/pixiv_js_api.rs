@@ -1,6 +1,5 @@
 use serde::{Serialize, Deserialize};
 use std::fmt::Debug;
-use futures::TryFutureExt;
 use thiserror::Error;
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -47,8 +46,6 @@ pub struct Urls2 {
 
 #[derive(Debug, Error)]
 pub enum PixivJsError {
-    #[error("Pixiv api error: {0}")]
-    ApiError(String),
     #[error("reqwest error: {0}")]
     ReqwestError(#[from] reqwest::Error),
     #[error("json error: {0}")]

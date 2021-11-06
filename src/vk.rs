@@ -5,7 +5,6 @@ use act_zero::{Actor, ActorResult, Produces};
 use itertools::Itertools;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
-use std::borrow::Cow;
 use std::sync::Arc;
 
 pub struct VkSenderActor {

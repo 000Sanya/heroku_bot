@@ -64,7 +64,7 @@ impl ImageSender for TelegramSenderActor {
     async fn handle_request(&mut self, request: Arc<ImageRequest>) -> ActorResult<()> {
         log::info!("Handle request from {}", request.source);
 
-        self.bot
+        let _ = self.bot
             .send_message(self.config.telegram_target, &request.source)
             .send()
             .await
@@ -75,13 +75,13 @@ impl ImageSender for TelegramSenderActor {
                 let file = image_as_teloxide_doc_file(image);
                 let image_file = image_as_teloxide_file(image);
 
-                self.bot
+                let _ = self.bot
                     .send_photo(self.config.telegram_target, image_file)
                     .send()
                     .await
                     .log_on_error("Error on upload as image");
 
-                self.bot
+                let _ = self.bot
                     .send_document(self.config.telegram_target, file)
                     .send()
                     .await
@@ -92,13 +92,13 @@ impl ImageSender for TelegramSenderActor {
             ImageRequestBody::Album { images } => {
                 for album in images.chunks(10) {
 
-                    self.upload_images(album, request.source.as_str()).await
+                    let _ = self.upload_images(album, request.source.as_str()).await
                         .log_on_error("Error on upload as image");
 
                     for image in album {
                         let file = image_as_teloxide_doc_file(image);
 
-                        self.bot
+                        let _ = self.bot
                             .send_document(self.config.telegram_target, file)
                             .send()
                             .await
