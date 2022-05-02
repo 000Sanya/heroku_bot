@@ -10,6 +10,7 @@ use warp::Filter;
 
 mod config;
 mod pixiv;
+mod pixiv_api;
 mod pixiv_ajax_api;
 mod pixiv_js_api;
 mod processor;

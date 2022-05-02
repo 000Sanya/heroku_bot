@@ -5,10 +5,10 @@ use thiserror::Error;
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Illust {
-    pub illust_id: String,
-    pub illust_type: i64,
-    pub create_date: String,
-    pub upload_date: String,
+    pub illust_id: Option<String>,
+    pub illust_type: Option<i64>,
+    pub create_date: Option<String>,
+    pub upload_date: Option<String>,
     pub urls: Urls,
     pub width: i64,
     pub height: i64,
