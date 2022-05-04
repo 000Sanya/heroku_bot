@@ -1,5 +1,4 @@
 use crate::config::Config;
-use crate::pixiv_js_api::PixivJsApi;
 use crate::processor::RequestProcessorActor;
 use crate::request::{Image, ImageRequest, ImageRequestBody};
 use crate::utils::ResultExtension;

@@ -7,17 +7,17 @@ use act_zero::{send, upcast, Addr};
 use std::env;
 
 use warp::Filter;
+use crate::discord::DiscordWebhookActor;
 
 mod config;
 mod pixiv;
 mod pixiv_api;
-mod pixiv_ajax_api;
-mod pixiv_js_api;
 mod processor;
 mod request;
 mod telegram;
 mod utils;
 mod vk;
+mod discord;
 
 fn pixiv_handler(
     pixiv_receiver: Addr<PixivReceiveActor>,
@@ -50,12 +50,13 @@ async fn main() {
     log::trace!("TEST");
 
     let telegram_target = spawn_actor(TelegramSenderActor::new(config.clone()));
-
     let vk_target = spawn_actor(VkSenderActor::new(config.clone()));
+    let discord_target = spawn_actor(DiscordWebhookActor::new(config.clone()));
 
     let processor = spawn_actor(RequestProcessorActor::new(vec![
         upcast!(telegram_target),
         upcast!(vk_target),
+        upcast!(discord_target),
     ]));
 
     let pixiv_receiver =

@@ -1,5 +1,4 @@
 use chrono::prelude::*;
-use md5::Digest;
 use reqwest::{header, Client};
 use serde::{Deserialize, Serialize};
 use serde_json::{Number, Value};
