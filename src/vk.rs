@@ -14,7 +14,7 @@ pub struct VkSenderActor {
 
 impl VkSenderActor {
     pub fn new(config: Arc<Config>) -> Self {
-        let api = rvk::APIClient::new(config.vk_bot_token.clone());
+        let api = rvk_methods::supported_api_client(config.vk_bot_token.clone());
 
         Self { config, api }
     }
@@ -59,7 +59,7 @@ impl ImageSender for VkSenderActor {
                 "random_id".into() => rand::thread_rng().next_u64().to_string()
             };
 
-            rvk::methods::messages::send::<serde_json::Value>(&self.api, params).await?;
+            rvk_methods::messages::send::<serde_json::Value>(&self.api, params).await?;
         }
 
         Produces::ok(())
@@ -72,7 +72,7 @@ async fn get_upload_server(client: &rvk::APIClient, peer_id: i64) -> anyhow::Res
     };
 
     let result =
-        rvk::methods::photos::get_messages_upload_server::<GetUploadServer>(client, params).await?;
+        rvk_methods::photos::get_messages_upload_server::<GetUploadServer>(client, params).await?;
 
     Ok(result.upload_url)
 }
@@ -98,7 +98,7 @@ async fn upload_photo(
         .await?;
 
     Ok(
-        rvk::methods::photos::save_messages_photo::<serde_json::Value>(
+        rvk_methods::photos::save_messages_photo::<serde_json::Value>(
             api,
             maplit::hashmap! {
                 "hash".into() => result.hash,

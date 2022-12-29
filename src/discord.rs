@@ -1,6 +1,5 @@
 use std::sync::Arc;
 use act_zero::{Actor, ActorResult, Produces};
-use serenity::builder::ExecuteWebhook;
 use crate::config::Config;
 use crate::request::{ImageRequest, ImageRequestBody, ImageSender};
 
@@ -28,6 +27,8 @@ impl Actor for DiscordWebhookActor {
 #[async_trait::async_trait]
 impl ImageSender for DiscordWebhookActor {
     async fn handle_request(&mut self, request: Arc<ImageRequest>) -> ActorResult<()> {
+        let webhook = self.config.discord_webhook.as_ref().unwrap();
+
         log::info!("Uploading image to Discord from {}", request.source);
         let mut images = Vec::new();
         match &request.body {
@@ -35,7 +36,7 @@ impl ImageSender for DiscordWebhookActor {
             ImageRequestBody::Album { images: i } => images.extend(i),
         };
 
-        let webhook = self.http.get_webhook_from_url(&self.config.discord_webhook).await?;
+        let webhook = self.http.get_webhook_from_url(webhook).await?;
 
         for image in images {
             let file_name = image.filename.clone();

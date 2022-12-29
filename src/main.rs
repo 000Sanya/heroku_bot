@@ -49,15 +49,20 @@ async fn main() {
     env_logger::init();
     log::trace!("TEST");
 
-    let telegram_target = spawn_actor(TelegramSenderActor::new(config.clone()));
-    let vk_target = spawn_actor(VkSenderActor::new(config.clone()));
-    let discord_target = spawn_actor(DiscordWebhookActor::new(config.clone()));
+    let mut targets = vec![];
 
-    let processor = spawn_actor(RequestProcessorActor::new(vec![
-        upcast!(telegram_target),
-        upcast!(vk_target),
-        upcast!(discord_target),
-    ]));
+    let telegram_target = spawn_actor(TelegramSenderActor::new(config.clone()));
+    targets.push(upcast!(telegram_target));
+
+    let vk_target = spawn_actor(VkSenderActor::new(config.clone()));
+    targets.push(upcast!(vk_target));
+
+    if config.discord_webhook.is_some() {
+        let discord_target = spawn_actor(DiscordWebhookActor::new(config.clone()));
+        targets.push(upcast!(discord_target));
+    }
+
+    let processor = spawn_actor(RequestProcessorActor::new(targets));
 
     let pixiv_receiver =
         spawn_actor(PixivReceiveActor::new(config.clone(), processor.clone()).await);

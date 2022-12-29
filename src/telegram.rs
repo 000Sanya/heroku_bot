@@ -5,6 +5,7 @@ use act_zero::{Actor, ActorError, ActorResult, Addr, Produces};
 use std::borrow::Cow;
 use std::sync::Arc;
 use teloxide_core::prelude::{Request, Requester};
+use teloxide_core::types::ChatId;
 
 pub struct TelegramSenderActor {
     bot: teloxide_core::Bot,
@@ -124,15 +125,15 @@ fn image_as_teloxide_file(image: &Image) -> teloxide_core::types::InputFile {
     let mut encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(&mut buffer, 90);
     encoder.encode_image(&image).expect("Error on encode image");
 
-    teloxide_core::types::InputFile::Memory {
-        file_name,
-        data: Cow::from(buffer),
-    }
+    teloxide_core::types::InputFile::memory(
+        buffer
+    )
+        .file_name(file_name)
 }
 
 fn image_as_teloxide_doc_file(image: &Image) -> teloxide_core::types::InputFile {
-    teloxide_core::types::InputFile::Memory {
-        file_name: image.filename.clone(),
-        data: Cow::from(image.data.to_vec()),
-    }
+    teloxide_core::types::InputFile::memory(
+        image.data.to_vec()
+    )
+        .file_name(image.filename.clone())
 }

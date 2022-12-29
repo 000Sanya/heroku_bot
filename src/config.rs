@@ -1,15 +1,16 @@
 use serde::Deserialize;
 use std::sync::Arc;
+use teloxide_core::prelude::ChatId;
 
 #[derive(Deserialize, Debug)]
 pub struct Config {
     pub telegram_token: String,
     pub pixiv_refresh: String,
-    pub telegram_target: i64,
+    pub telegram_target: ChatId,
     pub telegram_host: String,
     pub vk_bot_token: String,
     pub vk_target: i64,
-    pub discord_webhook: String,
+    pub discord_webhook: Option<String>,
 }
 
 pub fn get_config() -> Arc<Config> {
