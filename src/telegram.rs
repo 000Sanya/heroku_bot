@@ -2,10 +2,8 @@ use crate::config::Config;
 use crate::request::{Image, ImageRequest, ImageRequestBody, ImageSender};
 use crate::utils::ResultExtension;
 use act_zero::{Actor, ActorError, ActorResult, Addr, Produces};
-use std::borrow::Cow;
 use std::sync::Arc;
 use teloxide_core::prelude::{Request, Requester};
-use teloxide_core::types::ChatId;
 
 pub struct TelegramSenderActor {
     bot: teloxide_core::Bot,
@@ -31,11 +29,11 @@ impl Actor for TelegramSenderActor {
 impl TelegramSenderActor {
     pub fn new(config: Arc<Config>) -> Self {
         let client = reqwest::Client::builder()
-            .connection_verbose(true)
             .build()
             .expect("Erron on build client");
 
         let bot = teloxide_core::Bot::with_client(&config.telegram_token, client)
+            .throttle(Default::default())
             .set_api_url(reqwest::Url::parse(config.telegram_host.as_str()).expect("WTF"));
 
         Self { config, bot }

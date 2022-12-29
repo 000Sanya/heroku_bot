@@ -27,7 +27,7 @@ reqwest = { version = "0.11", features = ["json", "cookies"] }
 cookie = "0.16"
 itertools = "0.10"
 rand = "0.8"
-teloxide-core = "0.8"
+teloxide-core = { version = "0.8", features = ["throttle"] }
 thiserror = "1.0"
 image = "0.24"
 chrono = "0.4"
