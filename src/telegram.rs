@@ -3,6 +3,7 @@ use crate::request::{Image, ImageRequest, ImageRequestBody, ImageSender};
 use crate::utils::ResultExtension;
 use act_zero::{Actor, ActorError, ActorResult, Addr, Produces};
 use std::sync::Arc;
+use tap::Pipe;
 use teloxide_core::adaptors::Throttle;
 use teloxide_core::prelude::{Request, Requester};
 use teloxide_core::prelude::RequesterExt;
@@ -32,10 +33,13 @@ impl TelegramSenderActor {
     pub fn new(config: Arc<Config>) -> Self {
         let client = reqwest::Client::builder()
             .build()
-            .expect("Erron on build client");
+            .expect("Error on build client");
 
         let bot = teloxide_core::Bot::with_client(&config.telegram_token, client)
-            .set_api_url(reqwest::Url::parse(config.telegram_host.as_str()).expect("WTF"))
+            .pipe(|bot| match config.telegram_host.as_ref() {
+                None => bot,
+                Some(host) => bot.set_api_url(reqwest::Url::parse(host).expect("WTF"))
+            })
             .throttle(Default::default());
 
 
@@ -55,7 +59,7 @@ impl TelegramSenderActor {
             .send()
             .await?;
 
-        log::info!("Sended {} image from {}", album.len(), request);
+        log::info!("Sent {} image from {}", album.len(), request);
 
         Produces::ok(())
     }
@@ -71,7 +75,7 @@ impl ImageSender for TelegramSenderActor {
             .send_message(self.config.telegram_target, &request.source)
             .send()
             .await
-            .log_on_error("Error on send message");
+            .on_error(|_| log::error!("Error on send message"));
 
         match &request.body {
             ImageRequestBody::SingleImage { image } => {
@@ -83,23 +87,23 @@ impl ImageSender for TelegramSenderActor {
                     .send_photo(self.config.telegram_target, image_file)
                     .send()
                     .await
-                    .log_on_error("Error on upload as image");
+                    .on_error(|_| log::error!("Error on upload as image"));
 
                 let _ = self
                     .bot
                     .send_document(self.config.telegram_target, file)
                     .send()
                     .await
-                    .log_on_error("Error on upload as document");
+                    .on_error(|_| log::error!("Error on upload as document"));
 
-                log::info!("Sended one image from {}", request.source);
+                log::info!("Sent one image from {}", request.source);
             }
             ImageRequestBody::Album { images } => {
                 for album in images.chunks(10) {
                     let _ = self
                         .upload_images(album, request.source.as_str())
                         .await
-                        .log_on_error("Error on upload as image");
+                        .on_error(|_| log::error!("Error on upload as image"));
 
                     for image in album {
                         let file = image_as_teloxide_doc_file(image);
@@ -109,7 +113,7 @@ impl ImageSender for TelegramSenderActor {
                             .send_document(self.config.telegram_target, file)
                             .send()
                             .await
-                            .log_on_error("Error on upload as document");
+                            .on_error(|_| log::error!("Error on upload as document"));
                     }
                 }
             }

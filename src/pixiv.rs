@@ -8,7 +8,7 @@ use std::sync::Arc;
 use crate::pixiv_api::PixivClient;
 
 pub struct PixivReceiveActor {
-    client2: PixivClient,
+    client: PixivClient,
     processor: Addr<RequestProcessorActor>,
 }
 
@@ -16,27 +16,27 @@ impl Actor for PixivReceiveActor {}
 
 impl PixivReceiveActor {
     pub async fn new(_config: Arc<Config>, processor: Addr<RequestProcessorActor>) -> Self {
-        let mut client2 = PixivClient::new();
-        let _ = client2
+        let mut client = PixivClient::new();
+        let _ = client
             .auth(&_config.pixiv_refresh)
             .await
             .unwrap();
 
-        Self { client2, processor }
+        Self { client, processor }
     }
 
     pub async fn receive_illust(&mut self, id: i64) -> ActorResult<()> {
         log::info!("Start process {}", id);
         let illust = self
-            .client2
+            .client
             .get_illust_detail(id)
             .await
-            .log_on_error("Error on get illust")?;
+            .on_error(|_| log::error!("Error on get illust"))?;
         log::info!("{:?}", &illust);
         let images: Vec<_> = join_all(
             illust
                 .links()
-                .map(|s| self.client2.download(s))
+                .map(|s| self.client.download(s))
                 .collect::<Vec<_>>(),
         )
         .await

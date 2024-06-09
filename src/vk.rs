@@ -44,7 +44,7 @@ impl ImageSender for VkSenderActor {
             futures::future::join_all(images.into_iter().map(|i| upload_photo(&self.api, &url, i)))
                 .await
                 .into_iter()
-                .filter_map(|i| i.log_on_error("Error on photo upload").ok())
+                .filter_map(|i| i.on_error(|_| log::error!("Error on photo upload")).ok())
                 .collect();
 
         for imgs in images.chunks(10) {
@@ -93,7 +93,7 @@ async fn upload_photo(
         .multipart(form)
         .send()
         .await
-        .log_on_error("Erron on upload photo")?
+        .on_error(|_| log::error!("Erron on upload photo"))?
         .json()
         .await?;
 
@@ -108,7 +108,7 @@ async fn upload_photo(
         )
         .await
         .and_then(|photo| Ok(serde_json::from_value::<Vec<Photo>>(photo)?))
-        .log_on_error("Error on save photo")?,
+        .on_error(|_| log::error!("Error on save photo"))?,
     )
 }
 

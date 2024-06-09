@@ -5,9 +5,13 @@ use crate::vk::VkSenderActor;
 use act_zero::runtimes::tokio::spawn_actor;
 use act_zero::{send, upcast, Addr};
 use std::env;
+use std::sync::Arc;
+use axum::extract::State;
+use axum::Router;
+use axum::routing::post;
 
-use warp::Filter;
 use crate::discord::DiscordWebhookActor;
+use crate::gelbooru::GelbooruReceiveActor;
 
 mod config;
 mod pixiv;
@@ -18,28 +22,43 @@ mod telegram;
 mod utils;
 mod vk;
 mod discord;
+mod gelbooru;
 
-fn pixiv_handler(
-    pixiv_receiver: Addr<PixivReceiveActor>,
-    body: impl warp::Buf,
-) -> Result<&'static str, Box<dyn std::error::Error>> {
-    if body.has_remaining() {
-        let body = String::from_utf8(body.chunk().to_vec())?;
-        if body.contains("pixiv.net") {
-            let regex = regex::Regex::new(r"https?://(www\.)?pixiv\.net/en/artworks/(?P<id>\d+)")
-                .expect("Error on compile regex");
-            let id = regex
-                .captures(&body)
-                .and_then(|c| c.name("id"))
-                .and_then(|m| m.as_str().parse::<i64>().ok());
+async fn pixiv_handler(
+    State(app_state): State<Arc<AppState>>,
+    body: String,
+) -> &'static str {
+    if body.contains("pixiv.net") {
+        let regex = regex::Regex::new(r"https?://(www\.)?pixiv\.net/en/artworks/(?P<id>\d+)")
+            .expect("Error on compile regex");
+        let id = regex
+            .captures(&body)
+            .and_then(|c| c.name("id"))
+            .and_then(|m| m.as_str().parse::<i64>().ok());
 
-            if let Some(id) = id {
-                send!(pixiv_receiver.receive_illust(id));
-            }
+        if let Some(id) = id {
+            send!(app_state.pixiv_receiver.receive_illust(id));
         }
     }
 
-    Ok("Ok")
+    if body.contains("gelbooru.com") {
+        let regex = regex::Regex::new(r"id=(?P<id>\d+)")
+            .expect("Error on compile regex");
+        let id = regex
+            .captures(&body)
+            .and_then(|c| c.name("id"))
+            .and_then(|m| m.as_str().parse::<u64>().ok());
+        if let Some(id) = id {
+            send!(app_state.gelbooru_receiver.receive_id(id, body));
+        }
+    }
+
+    "Ok"
+}
+
+pub struct AppState {
+    pixiv_receiver: Addr<PixivReceiveActor>,
+    gelbooru_receiver: Addr<GelbooruReceiveActor>,
 }
 
 #[tokio::main]
@@ -47,7 +66,8 @@ async fn main() {
     let config = config::get_config();
     env::set_var("RUST_LOG", "heroku_bot=trace,atc_zero=warn");
     env_logger::init();
-    log::trace!("TEST");
+
+    log::info!("start bot");
 
     let mut targets = vec![];
 
@@ -67,18 +87,17 @@ async fn main() {
     let pixiv_receiver =
         spawn_actor(PixivReceiveActor::new(config.clone(), processor.clone()).await);
 
-    let server = warp::post()
-        .map(move || pixiv_receiver.clone())
-        .and(warp::path("post"))
-        .and(warp::body::content_length_limit(1024 * 64))
-        .and(warp::body::aggregate())
-        .map(pixiv_handler)
-        .map(|r: Result<&'static str, Box<dyn std::error::Error>>| r.unwrap_or("Error"));
+    let gelbooru_receiver = spawn_actor(GelbooruReceiveActor::new(config.clone(), processor.clone()));
 
     let port = env::var("PORT")
         .unwrap_or("8080".to_owned())
         .parse()
         .expect("not number");
 
-    warp::serve(server).run(([0, 0, 0, 0], port)).await
+    let app = Router::new()
+        .route("/post", post(pixiv_handler))
+        .with_state(Arc::new(AppState { pixiv_receiver, gelbooru_receiver }));
+
+    let listener = tokio::net::TcpListener::bind(("0.0.0.0", port)).await.unwrap();
+    axum::serve(listener, app).await.unwrap();
 }

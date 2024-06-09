@@ -1,3 +1,5 @@
+#![allow(non_camel_case_types)]
+
 use chrono::prelude::*;
 use reqwest::{header, Client};
 use serde::{Deserialize, Serialize};
@@ -442,9 +444,9 @@ const CLIENT_SECRET: &str = "lsACyCD94FhDUtGTXi3QzcFE2uU1hqtDaKeqrdwj";
 const HASH_SECRET: &str = "28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0bae2c";
 
 pub struct  PixivClient {
-    client: reqwest::Client,
+    client: Client,
     client_data: Option<PixivClientData>,
-    auth_date: Option<chrono::NaiveDateTime>,
+    auth_date: Option<NaiveDateTime>,
 }
 
 impl PixivClient {
@@ -491,13 +493,13 @@ impl PixivClient {
             .await?;
 
         self.client_data.replace(v.clone());
-        self.auth_date.replace(chrono::Utc::now().naive_utc());
+        self.auth_date.replace(Utc::now().naive_utc());
         Ok(v)
     }
 
     async fn check_auth(&mut self) {
         if let Some(auth_time) = self.auth_date.clone() {
-            if chrono::Utc::now().naive_utc() - auth_time < Duration::minutes(50) {
+            if Utc::now().naive_utc() - auth_time < Duration::minutes(50) {
                 return;
             }
         }

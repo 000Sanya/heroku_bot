@@ -1,5 +1,6 @@
 use std::sync::Arc;
 use act_zero::{Actor, ActorResult, Produces};
+use serenity::builder::{CreateAttachment, ExecuteWebhook};
 use crate::config::Config;
 use crate::request::{ImageRequest, ImageRequestBody, ImageSender};
 
@@ -45,9 +46,10 @@ impl ImageSender for DiscordWebhookActor {
             let mut encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(&mut buffer, 90);
             encoder.encode_image(&image)?;
 
-            webhook.execute(&self.http, false, |w| {
-                w.add_file((buffer.as_slice(), format!("{file_name}.jpg").as_str()))
-            })
+            webhook.execute(&self.http, false, ExecuteWebhook::new()
+                .add_file(
+                    CreateAttachment::bytes(buffer.as_slice(), format!("{file_name}.jpg").as_str())
+                ))
                 .await?;
         }
 

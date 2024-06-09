@@ -6,14 +6,19 @@ edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[profile.release]
+strip = true
+lto = true
+codegen-units = 1
+
 [dependencies]
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros"] }
-warp = "0.3"
+axum = "0.7.5"
 act-zero = { version = "0.4", features = ["tokio"] }
 log = "0.4"
-env_logger = "0.10"
+env_logger = "0.11.3"
 async-trait = "0.1"
 envy = "0.4"
 futures = "0.3"
@@ -23,13 +28,15 @@ rvk_methods = "0.1"
 rvk_objects = "0.2"
 maplit = "1.0"
 anyhow = "1.0"
-reqwest = { version = "0.11", features = ["json", "cookies"] }
-cookie = "0.16"
-itertools = "0.10"
+reqwest = { version = "0.11", features = ["json", "cookies", "multipart"] }
+cookie = "0.18"
+itertools = "0.13.0"
 rand = "0.8"
-teloxide-core = { version = "0.8", features = ["throttle"] }
-thiserror = "1.0"
-image = "0.24"
+teloxide-core = { version = "0.9", features = ["throttle"] }
+thiserror = "1"
+image = "0.25.1"
 chrono = "0.4"
 md5 = "0.7"
-serenity = { version = "0.11.1" }
+serenity = { version = "0.12" }
+tap = "1"
+gelbooru-api = "0.4.0"
